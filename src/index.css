@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Font";
+  src: url("./SinkinSans-500Medium.otf") format("opentype");
+}
+:root {
+  font-family: "Font";
+}
