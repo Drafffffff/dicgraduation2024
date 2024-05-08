@@ -4,6 +4,7 @@ import stuData from "./data.json";
 interface Point {
   x: number;
   y: number;
+  g?: number;
 }
 export const sketch = (p: P5) => {
   class Island {
@@ -11,8 +12,8 @@ export const sketch = (p: P5) => {
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 31;
-    lineNum = 100;
+    length = 150;
+    lineNum = 50;
     random: number[] = [];
     random2: number[] = [];
     scale: number = 1;
@@ -20,43 +21,51 @@ export const sketch = (p: P5) => {
     boxTime: number[] = [];
     boxList: { w: number; h: number }[] = [];
     motherP: Point[];
+    groupCount = 25;
 
     constructor() {
       this.motherP = [
-        { x: 0.2 * p.width, y: 0.15 * p.height },
-        { x: 0.42 * p.width, y: 0.4 * p.height },
-        { x: 0.77 * p.width, y: 0.6 * p.height },
-        { x: 0.2 * p.width, y: 0.8 * p.height },
+        { x: 0.3 * p.width, y: 0.1 * p.height },
+        { x: 0.82 * p.width, y: 0.2 * p.height },
+        { x: 0.3 * p.width, y: 0.36 * p.height },
+        { x: 0.83 * p.width, y: 0.45 * p.height },
+        { x: 0.2 * p.width, y: 0.55 * p.height },
       ];
-      // for (let i = 0; i < this.length; i++) {
-      //   this.random.push(Math.random());
-      //   this.random2.push(Math.random());
-      //   this.topPoints.push({
-      //     x: Math.random() * p.width * 0.9 + p.width * 0.05,
-      //     y: Math.random() * p.height * 0.45,
-      //   });
-      // }
 
+      //range
       for (let i = 0; i < this.motherP.length; i++) {
-        for (let j = 0; j < 7; j++) {
+        for (let j = 0; j < this.groupCount; j++) {
           this.random.push(Math.random());
           this.random2.push(Math.random());
           const c = this.motherP[i];
-          const x = p.constrain(c.x + p.random(-100, 100), 0, p.width);
-          const y = p.constrain(c.y + p.random(-100, 100), 0, p.height);
+          let x, y;
+          x = c.x + p.random(-150, 150);
+          y = c.y + p.random(-10, 130);
+          if (i == 0) {
+            x = c.x + p.random(-230, 230);
+            y = c.y + p.random(-130, 130);
+          }
+          if (i == 1) {
+            x = c.x + p.random(-230, 230);
+            y = c.y + p.random(-130, 130);
+          }
+          if (i == 2) {
+            x = c.x + p.random(-230, 230);
+            y = c.y + p.random(-120, 120);
+          }
           this.topPoints.push({
             x,
             y,
+            g: i,
           });
         }
       }
 
-      this.topPoints.sort((a, b) => a.y - b.y);
-      for (let i = 0; i < this.length; i++) {
+      for (let i = 0; i < this.motherP.length * this.groupCount; i++) {
         this.bottomPoints.push([]);
         for (let j = 0; j < this.lineNum; j++) {
           this.bottomPoints[i].push({
-            x: Math.random() * p.width * 0.9 + 5,
+            x: Math.random() * p.width,
             y: Math.random() * 100 + p.height - 200,
           });
         }
@@ -84,23 +93,37 @@ export const sketch = (p: P5) => {
     };
     applyField = (field: Vector[]) => {
       for (let i = 0; i < this.topPoints.length; i++) {
-        const p = this.topPoints[i];
-        const x = Math.floor(p.x / scl);
-        const y = Math.floor(p.y / scl);
-        const index = x + y * cols;
+        const point = this.topPoints[i];
+        const x = Math.floor(point.x / scl);
+        const y = Math.floor(point.y / scl);
+        const index = p.constrain(x + y * cols, 0, 500);
         const f = field[index];
-        console.log(p);
-        console.log(index);
-
         this.applyedTopPoints[i] = {
-          x: p.x + f.x,
-          y: p.y + f.y,
+          x: point.x + f.x,
+          y: point.y + f.y,
         };
       }
     };
     updata = () => {
       for (let i = 0; i < this.topPoints.length; i++) {
         p.push();
+        //transparent
+        if (this.topPoints[i].g == 0) {
+          p.translate(0, -120);
+        }
+        p.imageMode(p.CENTER);
+        if (i == this.groupCount * 1) {
+          p.image(maskimg, 500, 450, 4500, 800);
+        }
+        if (i == this.groupCount * 2) {
+          p.image(maskimg, 500, 600, 3500, 800);
+        }
+        if (i == this.groupCount * 3) {
+          p.image(maskimg, 100, 650, 2500, 2500);
+        }
+        if (i == this.groupCount * 4) {
+          p.image(maskimg, 800, 1000, 2500, 1200);
+        }
         // let x = 100 * p.noise(p.cos(0.009 * p.frameCount) + i);
         // let y = 100 * p.noise(p.sin(0.009 * p.frameCount) + 10000 + i);
         let x = 0;
@@ -114,15 +137,34 @@ export const sketch = (p: P5) => {
         };
         p.noFill();
         const c = p.map(p1.y, 0, 600, 0, 1);
-        const cColor = p.lerpColor(p.color("#b4fd59"), p.color("#17da05"), c);
+        const cColor = p.lerpColor(p.color("#b4fd59"), p.color("#07ca05"), c);
         p.stroke(cColor);
+        if (this.topPoints[i].g == 1 || this.topPoints[i].g == 0) {
+          // p.stroke("red");
+          if (this.random[i] > 0.5) {
+            p.stroke("#67c9bb");
+          }
+        }
+
+        //bottomline
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
+          const bp = JSON.parse(JSON.stringify(this.bottomPoints[i][j]));
+
+          if (this.topPoints[i].g == 0) {
+            bp.y = bp.y - 400;
+          }
+          if (this.topPoints[i].g == 1) {
+            bp.y = bp.y - 400;
+          }
+          if (this.topPoints[i].g == 2) {
+            bp.y = bp.y - 200;
+          }
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
-          this.calcYPath(p1, this.bottomPoints[i][j], i);
+          this.calcYPath(p1, bp, i);
         }
         p.fill("#ff4729");
         p.noStroke();
-        const rw = 0.8 * unit;
+        const rw = 0.3 * unit;
         p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
         p.noFill();
         p.stroke("#ff4729");
@@ -138,7 +180,7 @@ export const sketch = (p: P5) => {
           p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
           this.boxTime[i]--;
         } else {
-          if (p.random(1) > 0.995) {
+          if (p.random(1) > 0.9985) {
             const rww = p.random(3, 6) * unit;
             const rwh = p.random(2.5, 5) * unit;
             p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
@@ -169,17 +211,19 @@ export const sketch = (p: P5) => {
   const flowField: Vector[] = [];
   let normal: Font;
   let btimg: Image;
+  let maskimg: Image;
+  let redmaskimg: Image;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg.png");
-
+    maskimg = p.loadImage("./mask.png");
+    redmaskimg = p.loadImage("./redmask.png");
     p.createCanvas(1024, 1280);
     p.background(255);
     scl = p.width / 20;
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
-
     // p.pixelDensity(2);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
@@ -187,7 +231,7 @@ export const sketch = (p: P5) => {
   p.draw = () => {
     p.clear();
     p.push();
-    p.translate(0, p.width * 0.03);
+    p.translate(0, p.width * 0.13);
     // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
@@ -214,9 +258,7 @@ export const sketch = (p: P5) => {
     i.applyField(flowField);
     i.updata();
     // p.noLoop();
-    // i.scale = (slider.value() as number) / 100;
-    // i.yScale = (yScaleSlider.value() as number) / 100;
-    p.pop();
     p.image(btimg, 0, 0, p.width, p.height);
+    p.pop();
   };
 };
