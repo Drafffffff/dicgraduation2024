@@ -11,7 +11,7 @@ export const sketch = (p: P5) => {
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 41;
+    length = 31;
     lineNum = 80;
     random: number[] = [];
     random2: number[] = [];
@@ -21,8 +21,23 @@ export const sketch = (p: P5) => {
     boxList: { w: number; h: number }[] = [];
     isGrowEndList: boolean[] = [];
     growCompleteList: number[] = [];
+    growLineCompleteList: boolean[][] = [];
 
     constructor() {
+      this.init();
+    }
+    init = () => {
+      this.random = [];
+      this.random2 = [];
+      this.topPoints = [];
+      this.bottomPoints = [];
+      this.isGrowEndList = [];
+      this.growCompleteList = [];
+      this.growLineCompleteList = [];
+      this.boxTime = [];
+      this.boxList = [];
+      this.applyedTopPoints = [];
+
       for (let i = 0; i < this.length; i++) {
         this.random.push(Math.random());
         this.random2.push(Math.random());
@@ -37,7 +52,9 @@ export const sketch = (p: P5) => {
       this.topPoints.sort((a, b) => a.y - b.y);
       for (let i = 0; i < this.length; i++) {
         this.bottomPoints.push([]);
+        this.growLineCompleteList.push([]);
         for (let j = 0; j < this.lineNum; j++) {
+          this.growLineCompleteList[i].push(false);
           this.bottomPoints[i].push({
             x: Math.random() * p.width * 0.9 + p.width * 0.05,
             y: p.height,
@@ -45,7 +62,7 @@ export const sketch = (p: P5) => {
         }
         this.bottomPoints[i].sort((a, b) => a.y - b.y);
       }
-    }
+    };
     easeOutSine = (x: number) => {
       return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     };
@@ -65,6 +82,7 @@ export const sketch = (p: P5) => {
       p2: { x: number; y: number },
       i: number,
       j: number,
+      fram: number,
     ) => {
       const mid = {
         x: (p1.x + p2.x) / (2 - this.random[i]),
@@ -73,17 +91,15 @@ export const sketch = (p: P5) => {
       const p3 = { x: p1.x, y: mid.y };
       const p4 = { x: p2.x, y: mid.y };
 
-      if (this.isGrowEndList[i]) {
+      if (this.growLineCompleteList[i][j]) {
         p.bezier(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
         return;
       } else {
-        let offsetCount =
-          p.frameCount - this.random[i] * 200 + p.noise(i, j) * 50;
+        let offsetCount = fram - this.random[i] * 200 + p.noise(i, j) * 50;
         if (offsetCount < 0) {
           offsetCount = 0;
         }
-        const maxValue = 170 * p.map(this.random2[i], 0, 1, 0.7, 1.3);
-
+        const maxValue = 100;
         let linePose = p.map(
           (offsetCount % 170) * p.map(this.random2[i], 0, 1, 0.7, 1.3),
           0,
@@ -91,12 +107,16 @@ export const sketch = (p: P5) => {
           1,
           0,
         );
+
         linePose = this.easeOutSine(linePose);
-        if (linePose < 0) {
-          this.growCompleteList[i]++;
-          if (this.growCompleteList[i] > this.bottomPoints[i].length) {
+        if (linePose < 0.001) {
+          if (!this.growLineCompleteList[i][j]) {
+            this.growCompleteList[i] += 1;
+            this.growLineCompleteList[i][j] = true;
+          }
+          if (this.growCompleteList[i] == this.bottomPoints[i].length) {
             this.isGrowEndList[i] = true;
-            this.reInit(i);
+            // this.reInit(i);
           }
         }
         const lineStartX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, linePose);
@@ -138,7 +158,7 @@ export const sketch = (p: P5) => {
         };
       }
     };
-    updata = () => {
+    updata = (fram: number) => {
       for (let i = 0; i < this.topPoints.length; i++) {
         p.push();
         // let x = 100 * p.noise(p.cos(0.009 * p.frameCount) + i);
@@ -147,7 +167,7 @@ export const sketch = (p: P5) => {
         let y = 0;
         const bt = p.height - this.applyedTopPoints[i].y + y;
         const timeoffset = this.random[i] * 10;
-        if (p.frameCount % 10 === timeoffset) {
+        if (fram % 10 === timeoffset) {
           x = p.random(-10, 10);
           y = p.random(-10, 10);
         }
@@ -164,7 +184,7 @@ export const sketch = (p: P5) => {
         p.stroke(cColor);
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
-          this.calcYPath(p1, this.bottomPoints[i][j], i, j);
+          this.calcYPath(p1, this.bottomPoints[i][j], i, j, fram);
         }
 
         p.fill("#fff");
@@ -225,6 +245,8 @@ export const sketch = (p: P5) => {
   const flowField: Vector[] = [];
   let normal: Font;
   let btimg: Image;
+  const time = 600;
+  const outTime = 80;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
@@ -242,6 +264,8 @@ export const sketch = (p: P5) => {
     unit = p.sqrt(p.height * p.width) / 100;
   };
   p.draw = () => {
+    const fram = p.frameCount % time;
+
     p.clear();
     p.push();
     // p.translate(0, -p.width * 0.1);
@@ -269,11 +293,22 @@ export const sketch = (p: P5) => {
       zoff += 0.0001;
     }
     i.applyField(flowField);
-    i.updata();
+    i.updata(fram);
     // p.noLoop();
     // i.scale = (slider.value() as number) / 100;
     // i.yScale = (yScaleSlider.value() as number) / 100;
     p.pop();
+
+    if (fram > time - outTime && fram < time) {
+      const trans = p.map(fram, time - outTime, time, 0, 255);
+      const c = p.color(255, trans);
+      p.background(c);
+    }
+    if (fram == time - 1) {
+      for (let j = 0; j < i.length; j++) {
+        i.init();
+      }
+    }
     p.image(btimg, 0, 0, p.width, p.height);
   };
 };

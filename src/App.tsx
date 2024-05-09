@@ -12,7 +12,10 @@ function App() {
     container!.innerHTML = "";
     // const svg = new SVGDraw(container as HTMLElement, 1024, 1280);
     // svg.update();
-    new P5(sketch, container as HTMLElement);
+    const pp = new P5(sketch, container as HTMLElement);
+    return () => {
+      pp.remove();
+    };
   }, []);
   return (
     <>
