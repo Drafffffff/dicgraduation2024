@@ -7,44 +7,6 @@ import { sketch } from "./draw/p5";
 import ScrambleText from "scramble-text";
 
 function App() {
-  function setTime() {
-    setInterval(() => {
-      new ScrambleText(document.querySelector("#text1"), {
-        timeOffset: 100,
-      })
-        .start()
-        .play();
-    }, 3000);
-    setInterval(() => {
-      new ScrambleText(document.querySelector("#text2"), {
-        timeOffset: 100,
-      })
-        .start()
-        .play();
-    }, 2131);
-    setInterval(() => {
-      new ScrambleText(document.querySelector("#text5"), {
-        timeOffset: 100,
-      })
-        .start()
-        .play();
-    }, 1400);
-    // new P5(sketch, container as HTMLElement);
-    // setInterval(() => {
-    //   new ScrambleText(document.querySelector("#text3"), {
-    //     timeOffset: 100,
-    //   })
-    //     .start()
-    //     .play();
-    // }, 6531);
-    // setInterval(() => {
-    //   new ScrambleText(document.querySelector("#text4"), {
-    //     timeOffset: 80,
-    //   })
-    //     .start()
-    //     .play();
-    // }, 7531);
-  }
   useEffect(() => {
     const container = document.querySelector("#svgContainer");
     container!.innerHTML = "";

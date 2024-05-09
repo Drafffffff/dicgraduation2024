@@ -19,36 +19,16 @@ export const sketch = (p: P5) => {
     yScale: number = 1;
     boxTime: number[] = [];
     boxList: { w: number; h: number }[] = [];
-    motherP: Point[];
+    isGrowEnd: boolean = false;
 
     constructor() {
-      this.motherP = [
-        { x: 0.2 * p.width, y: 0.15 * p.height },
-        { x: 0.42 * p.width, y: 0.4 * p.height },
-        { x: 0.77 * p.width, y: 0.6 * p.height },
-        { x: 0.2 * p.width, y: 0.8 * p.height },
-      ];
-      // for (let i = 0; i < this.length; i++) {
-      //   this.random.push(Math.random());
-      //   this.random2.push(Math.random());
-      //   this.topPoints.push({
-      //     x: Math.random() * p.width * 0.9 + p.width * 0.05,
-      //     y: Math.random() * p.height * 0.45,
-      //   });
-      // }
-
-      for (let i = 0; i < this.motherP.length; i++) {
-        for (let j = 0; j < 7; j++) {
-          this.random.push(Math.random());
-          this.random2.push(Math.random());
-          const c = this.motherP[i];
-          const x = p.constrain(c.x + p.random(-100, 100), 0, p.width);
-          const y = p.constrain(c.y + p.random(-100, 100), 0, p.height);
-          this.topPoints.push({
-            x,
-            y,
-          });
-        }
+      for (let i = 0; i < this.length; i++) {
+        this.random.push(Math.random());
+        this.random2.push(Math.random());
+        this.topPoints.push({
+          x: Math.random() * p.width * 0.9 + p.width * 0.05,
+          y: Math.random() * p.height * 0.45,
+        });
       }
 
       this.topPoints.sort((a, b) => a.y - b.y);
@@ -56,13 +36,16 @@ export const sketch = (p: P5) => {
         this.bottomPoints.push([]);
         for (let j = 0; j < this.lineNum; j++) {
           this.bottomPoints[i].push({
-            x: Math.random() * p.width * 0.9 + 5,
+            x: Math.random() * p.width * 0.9 + p.width * 0.05,
             y: Math.random() * 100 + p.height - 200,
           });
         }
         this.bottomPoints[i].sort((a, b) => a.y - b.y);
       }
     }
+    easeOutSine = (x: number) => {
+      return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    };
     calcYPath = (
       p1: { x: number; y: number },
       p2: { x: number; y: number },
@@ -70,12 +53,26 @@ export const sketch = (p: P5) => {
     ) => {
       const mid = {
         x: (p1.x + p2.x) / (2 - this.random[i]),
-
         y: (p1.y + p2.y) / (2 - this.random2[i]),
       };
       const p3 = { x: p1.x, y: mid.y };
       const p4 = { x: p2.x, y: mid.y };
-      p.bezier(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
+
+      if (this.isGrowEnd) {
+        p.bezier(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
+        return;
+      } else {
+        let linePose = p.map(p.frameCount % 100, 0, 100, 1, 0);
+        linePose = this.easeOutSine(linePose);
+        if (linePose < 0.008) {
+          this.isGrowEnd = true;
+        }
+        const lineStartX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, linePose);
+        const lineStartY = p.bezierPoint(p1.y, p3.y, p4.y, p2.y, linePose);
+
+        p.bezier(lineStartX, lineStartY, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
+      }
+
       // for (let i = 0; i < 100; i++) {
       //   const x = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, i / 1000);
       //   const y = p.bezierPoint(p1.y, p3.y, p4.y, p2.y, i / 1000);
@@ -84,17 +81,15 @@ export const sketch = (p: P5) => {
     };
     applyField = (field: Vector[]) => {
       for (let i = 0; i < this.topPoints.length; i++) {
-        const p = this.topPoints[i];
-        const x = Math.floor(p.x / scl);
-        const y = Math.floor(p.y / scl);
-        const index = x + y * cols;
+        const point = this.topPoints[i];
+        const x = Math.floor(point.x / scl);
+        const y = Math.floor(point.y / scl);
+        const index = p.constrain(x + y * cols, 0, 499);
         const f = field[index];
-        console.log(p);
-        console.log(index);
 
         this.applyedTopPoints[i] = {
-          x: p.x + f.x,
-          y: p.y + f.y,
+          x: point.x + f.x,
+          y: point.y + f.y,
         };
       }
     };
@@ -106,6 +101,12 @@ export const sketch = (p: P5) => {
         let x = 0;
         let y = 0;
         const bt = p.height - this.applyedTopPoints[i].y + y;
+        const timeoffset = this.random[i] * 10;
+        if (p.frameCount % 10 === timeoffset) {
+          x = p.random(-10, 10);
+          y = p.random(-10, 10);
+        }
+
         const p1 = {
           // x: (this.topPoints[i].x + x) * this.scale,
           // y: (p.height - bt * this.yScale + 5 * unit) * this.scale,
@@ -114,14 +115,16 @@ export const sketch = (p: P5) => {
         };
         p.noFill();
         const c = p.map(p1.y, 0, 600, 0, 1);
-        const cColor = p.lerpColor(p.color("#b4fd59"), p.color("#17da05"), c);
+        const cColor = p.lerpColor(p.color("#00cDcB"), p.color("#17ca05"), c);
         p.stroke(cColor);
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
           this.calcYPath(p1, this.bottomPoints[i][j], i);
         }
-        p.fill("#ff4729");
-        p.noStroke();
+        p.fill("#fff");
+        p.stroke("#ff4f4f");
+        p.strokeWeight(0.8);
+
         const rw = 0.8 * unit;
         p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
         p.noFill();
@@ -173,6 +176,7 @@ export const sketch = (p: P5) => {
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg.png");
+    p.frameRate(30);
 
     p.createCanvas(1024, 1280);
     p.background(255);
@@ -180,7 +184,7 @@ export const sketch = (p: P5) => {
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
 
-    // p.pixelDensity(2);
+    p.pixelDensity(0.5);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
   };
@@ -197,7 +201,7 @@ export const sketch = (p: P5) => {
         let index = x + y * cols;
         let angle = p.noise(xoff, yoff, zoff) * p.TWO_PI;
         const v = Vector.fromAngle(angle);
-        v.setMag(50);
+        v.setMag(100);
         flowField[index] = v;
         xoff += inc;
         // p.strokeWeight(1);
