@@ -54,9 +54,9 @@ function App() {
   }, []);
   return (
     <>
-      {/* <div className="absolute top-0 left-0 w-[1024px] h-[1280px] "> */}
-      {/*   <img src="direction.png" alt="" className="w-full h-full" /> */}
-      {/* </div> */}
+      <div className="absolute top-0 left-0 w-[1024px] h-[1285px] ">
+        <img src="layout.png" alt="" className="w-full h-full" />
+      </div>
       {/* <div className="text text-red absolute top-0 left-0 w-[1024px] h-[1280px]"> */}
       {/*   <span className="topt top-[76px] left-[49px]" id="text2"> */}
       {/*     In the forest */}

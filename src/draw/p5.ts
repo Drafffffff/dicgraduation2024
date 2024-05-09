@@ -1,5 +1,6 @@
 import P5, { Font, Image, Vector } from "p5";
 import stuData from "./data.json";
+import * as P5Capture from "p5.capture";
 
 interface Point {
   x: number;
@@ -17,7 +18,8 @@ export const sketch = (p: P5) => {
     random: number[] = [];
     random2: number[] = [];
     scale: number = 1;
-    yScale: number = 1;
+    yScale: number = 0.9;
+    yScaleList: number[] = [];
     boxTime: number[] = [];
     boxList: { w: number; h: number }[] = [];
     motherP: Point[];
@@ -26,7 +28,7 @@ export const sketch = (p: P5) => {
     constructor() {
       this.motherP = [
         { x: 0.3 * p.width, y: 0.1 * p.height },
-        { x: 0.82 * p.width, y: 0.2 * p.height },
+        { x: 0.72 * p.width, y: 0.2 * p.height },
         { x: 0.3 * p.width, y: 0.36 * p.height },
         { x: 0.83 * p.width, y: 0.45 * p.height },
         { x: 0.2 * p.width, y: 0.55 * p.height },
@@ -53,6 +55,14 @@ export const sketch = (p: P5) => {
             x = c.x + p.random(-230, 230);
             y = c.y + p.random(-120, 120);
           }
+          if (i == 3) {
+            x = c.x + p.random(-230, 230);
+            y = c.y + p.random(-120, 120);
+          }
+          if (i == 4) {
+            x = c.x + p.random(-230, 230);
+            y = c.y + p.random(-100, 110);
+          }
           this.topPoints.push({
             x,
             y,
@@ -77,13 +87,27 @@ export const sketch = (p: P5) => {
       p2: { x: number; y: number },
       i: number,
     ) => {
+      let angle = p.sin(p.frameCount * 0.1 + i / 100);
+      angle =
+        p.map(angle, -1, 1, p.radians(60), p.radians(45)) +
+        p.noise(p.frameCount / 200 + i * 100);
+      const v = new Vector(p.cos(angle), p.sin(angle));
+      v.setMag(300);
+      p.push();
+      p.translate(p1.x, p1.y);
+      p.line(0, 0, v.x, v.y);
+      p.pop();
+
       const mid = {
         x: (p1.x + p2.x) / (2 - this.random[i]),
-
         y: (p1.y + p2.y) / (2 - this.random2[i]),
       };
-      const p3 = { x: p1.x, y: mid.y };
+
+      const p3 = { x: p1.x + v.x, y: p1.y + v.y };
+      // const p3 = { x: p1.x, y: mid.y };
       const p4 = { x: p2.x, y: mid.y };
+      // const p4 = { x: p2.x, y: mid.y };
+
       p.bezier(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
       // for (let i = 0; i < 100; i++) {
       //   const x = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, i / 1000);
@@ -105,6 +129,7 @@ export const sketch = (p: P5) => {
       }
     };
     updata = () => {
+      // this.yScale = p.constrain(p.sin(p.frameCount / 100), 0.7, 1);
       for (let i = 0; i < this.topPoints.length; i++) {
         p.push();
         //transparent
@@ -122,7 +147,7 @@ export const sketch = (p: P5) => {
           p.image(maskimg, 100, 650, 2500, 2500);
         }
         if (i == this.groupCount * 4) {
-          p.image(maskimg, 800, 1000, 2500, 1200);
+          p.image(maskimg, 800, 1100, 4500, 1500);
         }
         // let x = 100 * p.noise(p.cos(0.009 * p.frameCount) + i);
         // let y = 100 * p.noise(p.sin(0.009 * p.frameCount) + 10000 + i);
@@ -130,14 +155,16 @@ export const sketch = (p: P5) => {
         let y = 0;
         const bt = p.height - this.applyedTopPoints[i].y + y;
         const p1 = {
-          // x: (this.topPoints[i].x + x) * this.scale,
-          // y: (p.height - bt * this.yScale + 5 * unit) * this.scale,
-          x: (this.applyedTopPoints[i].x + x) * this.scale,
+          // x:
+          //   (this.applyedTopPoints[i].x + x) *
+          //   p.constrain(p.sin(p.frameCount / 100 + this.random[i]), 0.7, 1),
+          x: (this.applyedTopPoints[i].x + x) * this.yScale,
           y: (p.height - bt * this.yScale + 5 * unit) * this.scale,
         };
         p.noFill();
         const c = p.map(p1.y, 0, 600, 0, 1);
         const cColor = p.lerpColor(p.color("#b4fd59"), p.color("#07ca05"), c);
+        // const cColor = p.lerpColor(p.color("#b4fd59"), p.color("#07ca05"), c);
         p.stroke(cColor);
         if (this.topPoints[i].g == 1 || this.topPoints[i].g == 0) {
           // p.stroke("red");
@@ -145,6 +172,11 @@ export const sketch = (p: P5) => {
             p.stroke("#67c9bb");
           }
         }
+
+        const pp = {
+          x: p1.x,
+          y: p1.y + p.sin(p.frameCount * 0.05 + i * 10) * 30,
+        };
 
         //bottomline
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
@@ -159,13 +191,16 @@ export const sketch = (p: P5) => {
           if (this.topPoints[i].g == 2) {
             bp.y = bp.y - 200;
           }
+          if (this.topPoints[i].g == 4) {
+            bp.y = bp.y + 200;
+          }
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
-          this.calcYPath(p1, bp, i);
+          this.calcYPath(pp, bp, i);
         }
         p.fill("#ff4729");
         p.noStroke();
         const rw = 0.3 * unit;
-        p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
+        p.rect(pp.x - rw / 2, pp.y - rw / 2, rw, rw);
         p.noFill();
         p.stroke("#ff4729");
         p.strokeWeight(0.5);
@@ -215,6 +250,13 @@ export const sketch = (p: P5) => {
   let redmaskimg: Image;
 
   p.setup = () => {
+    //   if (p.frameCount === 1) {
+    //   const capture = P5Capture.getInstance();
+    //   capture.start({
+    //     format: "gif",
+    //     duration: 100,
+    //   });
+    // }
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg.png");
     maskimg = p.loadImage("./mask.png");
