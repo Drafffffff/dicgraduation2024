@@ -19,15 +19,18 @@ export const sketch = (p: P5) => {
     yScale: number = 1;
     boxTime: number[] = [];
     boxList: { w: number; h: number }[] = [];
-    isGrowEnd: boolean = false;
+    isGrowEndList: boolean[] = [];
+    growCompleteList: number[] = [];
 
     constructor() {
       for (let i = 0; i < this.length; i++) {
         this.random.push(Math.random());
         this.random2.push(Math.random());
+        this.isGrowEndList.push(false);
+        this.growCompleteList.push(0);
         this.topPoints.push({
           x: Math.random() * p.width * 0.9 + p.width * 0.05,
-          y: Math.random() * p.height * 0.45,
+          y: Math.random() * p.height * 0.65,
         });
       }
 
@@ -37,7 +40,7 @@ export const sketch = (p: P5) => {
         for (let j = 0; j < this.lineNum; j++) {
           this.bottomPoints[i].push({
             x: Math.random() * p.width * 0.9 + p.width * 0.05,
-            y: Math.random() * 100 + p.height - 200,
+            y: p.height,
           });
         }
         this.bottomPoints[i].sort((a, b) => a.y - b.y);
@@ -46,10 +49,12 @@ export const sketch = (p: P5) => {
     easeOutSine = (x: number) => {
       return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     };
+
     calcYPath = (
       p1: { x: number; y: number },
       p2: { x: number; y: number },
       i: number,
+      j: number,
     ) => {
       const mid = {
         x: (p1.x + p2.x) / (2 - this.random[i]),
@@ -58,19 +63,48 @@ export const sketch = (p: P5) => {
       const p3 = { x: p1.x, y: mid.y };
       const p4 = { x: p2.x, y: mid.y };
 
-      if (this.isGrowEnd) {
+      if (this.isGrowEndList[i]) {
         p.bezier(p1.x, p1.y, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
         return;
       } else {
-        let linePose = p.map(p.frameCount % 100, 0, 100, 1, 0);
+        let offsetCount =
+          p.frameCount - this.random[i] * 100 + p.noise(i, j) * 50;
+        if (offsetCount < 0) {
+          offsetCount = 0;
+        }
+        const maxValue = 170 * p.map(this.random2[i], 0, 1, 0.7, 1.3);
+
+        let linePose = p.map(
+          (offsetCount % 170) * p.map(this.random2[i], 0, 1, 0.7, 1.3),
+          0,
+          maxValue,
+          1,
+          0,
+        );
         linePose = this.easeOutSine(linePose);
-        if (linePose < 0.008) {
-          this.isGrowEnd = true;
+        if (linePose < 0) {
+          this.growCompleteList[i]++;
+          if (this.growCompleteList[i] > this.bottomPoints[i].length) {
+            this.isGrowEndList[i] = true;
+          }
         }
         const lineStartX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, linePose);
         const lineStartY = p.bezierPoint(p1.y, p3.y, p4.y, p2.y, linePose);
-
-        p.bezier(lineStartX, lineStartY, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
+        const mid = {
+          x: (lineStartX + p2.x) / (2 - this.random[i]),
+          y: (lineStartY + p2.y) / (2 - this.random2[i]),
+        };
+        p.bezier(
+          lineStartX,
+          lineStartY,
+          lineStartX,
+          mid.y,
+          p2.x,
+          mid.y,
+          p2.x,
+          p2.y,
+        );
+        // p.bezier(lineStartX, lineStartY, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
       }
 
       // for (let i = 0; i < 100; i++) {
@@ -119,43 +153,51 @@ export const sketch = (p: P5) => {
         p.stroke(cColor);
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
-          this.calcYPath(p1, this.bottomPoints[i][j], i);
+          this.calcYPath(p1, this.bottomPoints[i][j], i, j);
         }
+
         p.fill("#fff");
         p.stroke("#ff4f4f");
         p.strokeWeight(0.8);
 
-        const rw = 0.8 * unit;
-        p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
-        p.noFill();
-        p.stroke("#ff4729");
-        p.strokeWeight(0.5);
-        if (this.boxTime[i] >= 0) {
-          const rww = this.boxList[i].w + p.random(-5, 5);
-          const rwh = this.boxList[i].h + p.random(-5, 5);
-          const offsetX = p.random(-rww * 0.1, rww * 0.1) / 2;
-          const offsetY = p.random(-rwh * 0.1, rwh * 0.1) / 2;
-          p.rect(p1.x - rww / 2 + offsetX, p1.y - rwh / 2 + offsetY, rww, rwh);
-          p.fill("#103004");
-          p.textFont(normal);
-          p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
-          this.boxTime[i]--;
-        } else {
-          if (p.random(1) > 0.995) {
-            const rww = p.random(3, 6) * unit;
-            const rwh = p.random(2.5, 5) * unit;
-            p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
-            this.boxList[i] = { w: rww, h: rwh };
-            if (p.random(1) > 0.5) {
-              this.boxTime[i] = Math.floor(p.random(0, 120));
-            } else {
-              this.boxTime[i] = Math.floor(p.random(0, 10));
+        if (this.isGrowEndList[i]) {
+          const rw = 0.8 * unit;
+          p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
+          p.noFill();
+          p.stroke("#ff4729");
+          p.strokeWeight(0.5);
+          if (this.boxTime[i] >= 0) {
+            const rww = this.boxList[i].w + p.random(-5, 5);
+            const rwh = this.boxList[i].h + p.random(-5, 5);
+            const offsetX = p.random(-rww * 0.1, rww * 0.1) / 2;
+            const offsetY = p.random(-rwh * 0.1, rwh * 0.1) / 2;
+            p.rect(
+              p1.x - rww / 2 + offsetX,
+              p1.y - rwh / 2 + offsetY,
+              rww,
+              rwh,
+            );
+            p.fill("#103004");
+            p.textFont(normal);
+            p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
+            this.boxTime[i]--;
+          } else {
+            if (p.random(1) > 0.995) {
+              const rww = p.random(3, 6) * unit;
+              const rwh = p.random(2.5, 5) * unit;
+              p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
+              this.boxList[i] = { w: rww, h: rwh };
+              if (p.random(1) > 0.5) {
+                this.boxTime[i] = Math.floor(p.random(0, 120));
+              } else {
+                this.boxTime[i] = Math.floor(p.random(0, 10));
+              }
             }
-          }
-          if (p.random(1) > 0.999) {
-            const rww = p.random(30, 100) * unit;
-            const rwh = p.random(30, 60) * unit;
-            p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
+            if (p.random(1) > 0.999) {
+              const rww = p.random(30, 100) * unit;
+              const rwh = p.random(30, 60) * unit;
+              p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
+            }
           }
         }
         p.pop();
@@ -191,7 +233,7 @@ export const sketch = (p: P5) => {
   p.draw = () => {
     p.clear();
     p.push();
-    p.translate(0, p.width * 0.03);
+    // p.translate(0, p.width * 0.03);
     // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
