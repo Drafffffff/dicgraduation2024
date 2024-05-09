@@ -11,8 +11,8 @@ export const sketch = (p: P5) => {
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 31;
-    lineNum = 100;
+    length = 41;
+    lineNum = 80;
     random: number[] = [];
     random2: number[] = [];
     scale: number = 1;
@@ -30,7 +30,7 @@ export const sketch = (p: P5) => {
         this.growCompleteList.push(0);
         this.topPoints.push({
           x: Math.random() * p.width * 0.9 + p.width * 0.05,
-          y: Math.random() * p.height * 0.65,
+          y: Math.random() * p.height * 0.55,
         });
       }
 
@@ -50,6 +50,16 @@ export const sketch = (p: P5) => {
       return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
     };
 
+    reInit = (i: number) => {
+      this.random[i] = Math.random();
+      this.random2[i] = Math.random();
+      this.isGrowEndList[i] = false;
+      this.growCompleteList[i] = 0;
+      this.topPoints[i] = {
+        x: Math.random() * p.width * 0.9 + p.width * 0.05,
+        y: Math.random() * p.height * 0.65,
+      };
+    };
     calcYPath = (
       p1: { x: number; y: number },
       p2: { x: number; y: number },
@@ -68,7 +78,7 @@ export const sketch = (p: P5) => {
         return;
       } else {
         let offsetCount =
-          p.frameCount - this.random[i] * 100 + p.noise(i, j) * 50;
+          p.frameCount - this.random[i] * 200 + p.noise(i, j) * 50;
         if (offsetCount < 0) {
           offsetCount = 0;
         }
@@ -86,6 +96,7 @@ export const sketch = (p: P5) => {
           this.growCompleteList[i]++;
           if (this.growCompleteList[i] > this.bottomPoints[i].length) {
             this.isGrowEndList[i] = true;
+            this.reInit(i);
           }
         }
         const lineStartX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, linePose);
@@ -148,8 +159,8 @@ export const sketch = (p: P5) => {
           y: (p.height - bt * this.yScale + 5 * unit) * this.scale,
         };
         p.noFill();
-        const c = p.map(p1.y, 0, 600, 0, 1);
-        const cColor = p.lerpColor(p.color("#00cDcB"), p.color("#17ca05"), c);
+        const c = p.map(p1.y, 0, p.height * 0.7, 0, 1);
+        const cColor = p.lerpColor(p.color("#00cDdB"), p.color("#17ca05"), c);
         p.stroke(cColor);
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
           p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
@@ -226,14 +237,14 @@ export const sketch = (p: P5) => {
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
 
-    p.pixelDensity(0.5);
+    p.pixelDensity(1);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
   };
   p.draw = () => {
     p.clear();
     p.push();
-    // p.translate(0, p.width * 0.03);
+    // p.translate(0, -p.width * 0.1);
     // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
