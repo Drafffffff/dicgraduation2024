@@ -246,7 +246,7 @@ export const sketch = (p: P5) => {
   let normal: Font;
   let btimg: Image;
   const time = 600;
-  const outTime = 80;
+  const outTime = 60;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
