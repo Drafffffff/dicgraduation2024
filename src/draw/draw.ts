@@ -12,7 +12,7 @@ export default class SVGDraw {
   topPoints: Point[] = [];
   bottomPoints: Point[][] = [];
   lineAttr: { [key: string]: string | number };
-  length = 75;
+  length = 30;
   lineNum = 80;
   gradient: Gradient;
 
@@ -30,7 +30,7 @@ export default class SVGDraw {
     for (let i = 0; i < this.length; i++) {
       this.topPoints.push({
         x: Math.random() * 0.9 * width + 5,
-        y: Math.random() * 0.45 * height,
+        y: Math.random() * 0.8 * height + 100,
       });
     }
     this.topPoints.sort((a, b) => a.y - b.y);
@@ -39,7 +39,7 @@ export default class SVGDraw {
       for (let j = 0; j < this.lineNum; j++) {
         this.bottomPoints[i].push({
           x: Math.random() * 0.99 * width + 5,
-          y: Math.random() * 0.1444 * height + height * 0.5,
+          y: Math.random() * 0.1444 * height + height * 0.9,
           // y: 990,
         });
       }
