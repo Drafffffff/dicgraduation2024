@@ -44,8 +44,8 @@ export const sketch = (p: P5) => {
         this.isGrowEndList.push(false);
         this.growCompleteList.push(0);
         this.topPoints.push({
-          x: Math.random() * p.width * 0.9 + p.width * 0.05,
-          y: Math.random() * p.height * 0.55,
+          x: Math.random() * p.width * 0.92 + p.width * 0.04,
+          y: Math.random() * p.height * 0.8,
         });
       }
 
@@ -253,7 +253,7 @@ export const sketch = (p: P5) => {
     btimg = p.loadImage("./btimg.png");
     p.frameRate(30);
 
-    p.createCanvas(1024, 1280);
+    p.createCanvas(1024, 2048);
     p.background(255);
     scl = p.width / 20;
     rows = p.width / scl;
@@ -272,6 +272,8 @@ export const sketch = (p: P5) => {
     // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
+    console.log(rows, cols);
+
     for (let y = 0; y < rows; y++) {
       let xoff = 0;
       for (let x = 0; x < cols; x++) {
@@ -281,13 +283,13 @@ export const sketch = (p: P5) => {
         v.setMag(100);
         flowField[index] = v;
         xoff += inc;
-        // p.strokeWeight(1);
-        // p.stroke(0, 50);
-        // p.push();
-        // p.translate(x * scl, y * scl);
-        // p.rotate(v.heading());
-        // p.line(0, 0, scl, 0);
-        // p.pop();
+        p.strokeWeight(1);
+        p.stroke(0, 50);
+        p.push();
+        p.translate(x * scl, y * scl);
+        p.rotate(v.heading());
+        p.line(0, 0, scl, 0);
+        p.pop();
       }
       yoff += inc;
       zoff += 0.0001;
@@ -309,6 +311,6 @@ export const sketch = (p: P5) => {
         i.init();
       }
     }
-    p.image(btimg, 0, 0, p.width, p.height);
+    // p.image(btimg, 0, 0, p.width, p.height);
   };
 };
