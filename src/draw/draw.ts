@@ -12,14 +12,14 @@ export default class SVGDraw {
   topPoints: Point[] = [];
   bottomPoints: Point[][] = [];
   lineAttr: { [key: string]: string | number };
-  length = 31;
+  length = 75;
   lineNum = 80;
   gradient: Gradient;
 
   constructor(
     container: HTMLElement,
-    width: number = 1000,
-    height: number = 1500,
+    width: number = 2100,
+    height: number = 1000,
   ) {
     this.draw = SVG().addTo(container).size(width, height);
 
@@ -29,8 +29,8 @@ export default class SVGDraw {
     });
     for (let i = 0; i < this.length; i++) {
       this.topPoints.push({
-        x: Math.random() * 0.99 * width + 5,
-        y: Math.random() * 0.333 * height,
+        x: Math.random() * 0.9 * width + 5,
+        y: Math.random() * 0.45 * height,
       });
     }
     this.topPoints.sort((a, b) => a.y - b.y);
@@ -68,8 +68,9 @@ export default class SVGDraw {
     // requestAnimationFrame(this.update);
     this.draw.clear();
     for (let i = 0; i < this.topPoints.length; i++) {
+      const group = this.draw.group();
       for (let j = 0; j < this.bottomPoints[i].length; j++) {
-        this.draw
+        group
           .path(this.calcYPath(this.topPoints[i], this.bottomPoints[i][j]))
           .attr({
             ...this.lineAttr,
@@ -78,7 +79,8 @@ export default class SVGDraw {
           });
       }
       const control = this.draw.rect(6, 6).attr({
-        fill: "#f06",
+        fill: "#fff",
+        stroke: "#f06",
         x: this.topPoints[i].x - 3,
         y: this.topPoints[i].y - 3,
       });

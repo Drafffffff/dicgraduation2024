@@ -1,8 +1,6 @@
 import { useEffect } from "react";
 import "./App.css";
-import P5 from "p5";
-// import SVGDraw from "./draw/draw";
-import { sketch } from "./draw/p5";
+import SVGDraw from "./draw/draw";
 //@ts-ignore
 import ScrambleText from "scramble-text";
 
@@ -10,12 +8,8 @@ function App() {
   useEffect(() => {
     const container = document.querySelector("#svgContainer");
     container!.innerHTML = "";
-    // const svg = new SVGDraw(container as HTMLElement, 1024, 1280);
-    // svg.update();
-    const pp = new P5(sketch, container as HTMLElement);
-    return () => {
-      pp.remove();
-    };
+    const svg = new SVGDraw(container as HTMLElement, 2100, 1000);
+    svg.update();
   }, []);
   return (
     <>
