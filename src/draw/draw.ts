@@ -12,7 +12,7 @@ export default class SVGDraw {
   topPoints: Point[] = [];
   bottomPoints: Point[][] = [];
   lineAttr: { [key: string]: string | number };
-  length = 30;
+  length = 20;
   lineNum = 80;
   gradient: Gradient;
 

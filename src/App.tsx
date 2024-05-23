@@ -8,7 +8,7 @@ function App() {
   useEffect(() => {
     const container = document.querySelector("#svgContainer");
     container!.innerHTML = "";
-    const svg = new SVGDraw(container as HTMLElement, 1000, 2000);
+    const svg = new SVGDraw(container as HTMLElement, 1800, 2000);
     svg.update();
   }, []);
   return (
