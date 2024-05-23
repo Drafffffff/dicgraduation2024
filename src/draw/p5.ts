@@ -8,8 +8,13 @@ interface Point {
 export const sketch = (p: P5) => {
   class Island {
     topPoints: Point[] = [];
+    topPoints1: Point[] = [];
+    topPoints2: Point[] = [];
+    topPoints3: Point[] = [];
+    topPoints4: Point[] = [];
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
+
     // lineAttr: { [key: string]: string | number };
     length = 31;
     lineNum = 80;
@@ -47,9 +52,41 @@ export const sketch = (p: P5) => {
           x: Math.random() * p.width * 0.92 + p.width * 0.04,
           y: Math.random() * p.height * 0.8,
         });
+
+        this.topPoints1.push({
+          x: Math.random() * p.width * 0.92 + p.width * 0.04,
+          y: Math.random() * p.height * 0.8,
+        });
+
+        let x = p.map(i, 0, this.length, 0, 1);
+        let y = 2 * x;
+        this.topPoints2.push({
+          x: x * 1000,
+          y: y * 1000,
+        });
+
+        if (p.random() < 0.9) {
+          this.topPoints3.push({
+            x: Math.random() * p.width * 0.25 + p.width * 0.04,
+            y: Math.random() * p.height * 0.18 + 0 * p.height,
+          });
+        } else {
+          this.topPoints3.push({
+            x: Math.random() * p.width * 0.92 + p.width * 0.04,
+            y: Math.random() * p.height * 0.2 + 0.7 * p.height,
+          });
+        }
+        this.topPoints4.push({
+          x: Math.random() * p.width * 0.92 + p.width * 0.04,
+          y: Math.random() * p.height * 0.05,
+        });
       }
 
       this.topPoints.sort((a, b) => a.y - b.y);
+      this.topPoints1.sort((a, b) => a.y - b.y);
+      this.topPoints2.sort((a, b) => a.y - b.y);
+      this.topPoints3.sort((a, b) => a.y - b.y);
+      this.topPoints4.sort((a, b) => a.y - b.y);
       for (let i = 0; i < this.length; i++) {
         this.bottomPoints.push([]);
         this.growLineCompleteList.push([]);
@@ -144,12 +181,24 @@ export const sketch = (p: P5) => {
       //   p.point(x, y);
       // }
     };
-    applyField = (field: Vector[]) => {
+    applyField = (field: Vector[], scene: number) => {
       for (let i = 0; i < this.topPoints.length; i++) {
-        const point = this.topPoints[i];
+        let point;
+        if (scene == 1) {
+          point = this.topPoints1[i];
+        } else if (scene == 2) {
+          point = this.topPoints2[i];
+        } else if (scene == 3) {
+          point = this.topPoints3[i];
+        } else if (scene == 4) {
+          point = this.topPoints4[i];
+        } else {
+          point = this.topPoints[i];
+        }
+
         const x = Math.floor(point.x / scl);
         const y = Math.floor(point.y / scl);
-        const index = p.constrain(x + y * cols, 0, 499);
+        const index = p.constrain(y + x * cols, 0, 499);
         const f = field[index];
 
         this.applyedTopPoints[i] = {
@@ -159,6 +208,9 @@ export const sketch = (p: P5) => {
       }
     };
     updata = (fram: number) => {
+      if (fram == 0) {
+        return;
+      }
       for (let i = 0; i < this.topPoints.length; i++) {
         p.push();
         // let x = 100 * p.noise(p.cos(0.009 * p.frameCount) + i);
@@ -209,7 +261,7 @@ export const sketch = (p: P5) => {
               rwh,
             );
             p.fill("#103004");
-            p.textFont(normal);
+            // p.textFont(normal);
             p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
             this.boxTime[i]--;
           } else {
@@ -245,6 +297,7 @@ export const sketch = (p: P5) => {
   const flowField: Vector[] = [];
   let normal: Font;
   let btimg: Image;
+  let scene = 1;
   const time = 600;
   const outTime = 60;
 
@@ -253,7 +306,7 @@ export const sketch = (p: P5) => {
     btimg = p.loadImage("./btimg.png");
     p.frameRate(30);
 
-    p.createCanvas(1024, 2048);
+    p.createCanvas(1024, 1536);
     p.background(255);
     scl = p.width / 20;
     rows = p.width / scl;
@@ -266,13 +319,16 @@ export const sketch = (p: P5) => {
   p.draw = () => {
     const fram = p.frameCount % time;
 
+    console.log(scene);
+    if (fram == 0) {
+      scene += 1;
+      if (scene > 4) scene = 1;
+    }
+    scene = 1;
     p.clear();
-    p.push();
-    // p.translate(0, -p.width * 0.1);
     // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
-    console.log(rows, cols);
 
     for (let y = 0; y < rows; y++) {
       let xoff = 0;
@@ -285,31 +341,30 @@ export const sketch = (p: P5) => {
         xoff += inc;
         p.strokeWeight(1);
         p.stroke(0, 50);
-        p.push();
-        p.translate(x * scl, y * scl);
-        p.rotate(v.heading());
-        p.line(0, 0, scl, 0);
-        p.pop();
+        // p.push();
+        // p.translate(y * scl, x * scl);
+        // p.rotate(v.heading());
+        // p.line(0, 0, scl, 0);
+        // p.pop();
       }
       yoff += inc;
       zoff += 0.0001;
     }
-    i.applyField(flowField);
+    i.applyField(flowField, scene);
     i.updata(fram);
     // p.noLoop();
     // i.scale = (slider.value() as number) / 100;
     // i.yScale = (yScaleSlider.value() as number) / 100;
-    p.pop();
 
     if (fram > time - outTime && fram < time) {
       const trans = p.map(fram, time - outTime, time, 0, 255);
       const c = p.color(255, trans);
       p.background(c);
     }
-    if (fram == time - 1) {
-      for (let j = 0; j < i.length; j++) {
-        i.init();
-      }
+    if (fram == 0) {
+      console.log(time);
+      console.log("over");
+      i.init();
     }
     // p.image(btimg, 0, 0, p.width, p.height);
   };
