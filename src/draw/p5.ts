@@ -11,7 +11,7 @@ export const sketch = (p: P5) => {
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 41;
+    length = 30;
     lineNum = 80;
     random: number[] = [];
     random2: number[] = [];
@@ -274,6 +274,6 @@ export const sketch = (p: P5) => {
     // i.scale = (slider.value() as number) / 100;
     // i.yScale = (yScaleSlider.value() as number) / 100;
     p.pop();
-    p.image(btimg, 0, 0, p.width, p.height);
+    // p.image(btimg, 0, 0, p.width, p.height);
   };
 };
