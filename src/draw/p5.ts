@@ -11,7 +11,7 @@ export const sketch = (p: P5) => {
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 30;
+    length = 50;
     lineNum = 80;
     random: number[] = [];
     random2: number[] = [];
