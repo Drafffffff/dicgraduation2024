@@ -1,5 +1,9 @@
 import P5, { Font, Image, Vector } from "p5";
 import stuData from "./data.json";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
+
+const zip = new JSZip();
 
 interface Point {
   x: number;
@@ -163,7 +167,7 @@ export const sketch = (p: P5) => {
         const cColor = p.lerpColor(p.color("#00cDdB"), p.color("#17ca05"), c);
         p.stroke(cColor);
         for (let j = 0; j < this.bottomPoints[i].length; j++) {
-          p.strokeWeight((p1.y / p.height) * 0.8 + 0.06);
+          p.strokeWeight((p1.y / p.height) * 1.2 + 0.16);
           this.calcYPath(p1, this.bottomPoints[i][j], i, j);
         }
 
@@ -225,13 +229,15 @@ export const sketch = (p: P5) => {
   const flowField: Vector[] = [];
   let normal: Font;
   let btimg: Image;
+  const imageList: string[] = [];
+  const time = 500;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg.png");
     p.frameRate(30);
 
-    p.createCanvas(1024, 1280);
+    p.createCanvas(2000, 3000);
     p.background(255);
     scl = p.width / 20;
     rows = p.width / scl;
@@ -242,10 +248,10 @@ export const sketch = (p: P5) => {
     unit = p.sqrt(p.height * p.width) / 100;
   };
   p.draw = () => {
-    p.clear();
+    // p.clear();
+    p.background(255);
     p.push();
     // p.translate(0, -p.width * 0.1);
-    // p.background(255);
     var yoff = 0;
     p.noiseDetail(7, 0.4);
     for (let y = 0; y < rows; y++) {
@@ -275,5 +281,32 @@ export const sketch = (p: P5) => {
     // i.yScale = (yScaleSlider.value() as number) / 100;
     p.pop();
     // p.image(btimg, 0, 0, p.width, p.height);
+    //
+    if (p.frameCount <= time) {
+      //ts-ignore
+      imageList.push((p.get() as any).canvas.toDataURL());
+    }
+    if (p.frameCount === time) {
+      for (let i = 0; i < imageList.length; i++) {
+        const imgData = imageList[i].split(",")[1];
+        console.log("正在处理第", i + 1, "帧图片");
+
+        zip.file(`${String(i + 1).padStart(4, "0")}.png`, imgData, {
+          base64: true,
+        });
+      }
+      console.log("download");
+
+      // 创建 zip 并下载
+      zip
+        .generateAsync({ type: "blob" }, (e) => {
+          console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
+        })
+        .then((content) => {
+          console.log("start download");
+          saveAs(content, "frames.zip");
+          console.log("finished");
+        });
+    }
   };
 };
