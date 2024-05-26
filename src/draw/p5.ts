@@ -33,8 +33,8 @@ export const sketch = (p: P5) => {
         this.isGrowEndList.push(false);
         this.growCompleteList.push(0);
         this.topPoints.push({
-          x: Math.random() * p.width * 0.9 + p.width * 0.05,
-          y: Math.random() * p.height * 0.55,
+          x: Math.random() * p.width * 0.94 + p.width * 0.03,
+          y: Math.random() * p.height * 0.8,
         });
       }
 
@@ -230,14 +230,15 @@ export const sketch = (p: P5) => {
   let normal: Font;
   let btimg: Image;
   const imageList: string[] = [];
-  const time = 500;
+  const time = 900;
+  const batchSize = 300;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg.png");
     p.frameRate(30);
 
-    p.createCanvas(2000, 3000);
+    p.createCanvas(1200, 1600);
     p.background(255);
     scl = p.width / 20;
     rows = p.width / scl;
@@ -284,29 +285,55 @@ export const sketch = (p: P5) => {
     //
     if (p.frameCount <= time) {
       //ts-ignore
+      console.log(p.frameCount);
+
       imageList.push((p.get() as any).canvas.toDataURL());
     }
     if (p.frameCount === time) {
-      for (let i = 0; i < imageList.length; i++) {
-        const imgData = imageList[i].split(",")[1];
-        console.log("正在处理第", i + 1, "帧图片");
+      let zip = new JSZip();
+      const processFramesInBatches = async () => {
+        for (let i = 0; i < imageList.length; i += batchSize) {
+          zip = new JSZip();
+          const batch = imageList.slice(i, i + batchSize);
+          await processBatch(batch, i);
+          const zipBlob = await zip.generateAsync({ type: "blob" }, (e) => {
+            console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
+          });
+          saveAs(zipBlob, "FLframes.zip");
+        }
+      };
 
-        zip.file(`${String(i + 1).padStart(4, "0")}.png`, imgData, {
-          base64: true,
-        });
-      }
-      console.log("download");
+      const processBatch = async (batch: string[], offset: number) => {
+        for (let i = 0; i < batch.length; i++) {
+          const imgData = batch[i].split(",")[1];
+          console.log("正在处理第", offset + i + 1, "帧图片");
+          zip.file(`${String(offset + i + 1).padStart(4, "0")}.png`, imgData, {
+            base64: true,
+          });
+        }
+      };
 
-      // 创建 zip 并下载
-      zip
-        .generateAsync({ type: "blob" }, (e) => {
-          console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
-        })
-        .then((content) => {
-          console.log("start download");
-          saveAs(content, "frames.zip");
-          console.log("finished");
-        });
+      processFramesInBatches();
+      // for (let i = 0; i < imageList.length; i++) {
+      //   const imgData = imageList[i].split(",")[1];
+      //   console.log("正在处理第", i + 1, "帧图片");
+      //
+      //   zip.file(`${String(i + 1).padStart(4, "0")}.png`, imgData, {
+      //     base64: true,
+      //   });
+      // }
+      // console.log("download");
+      //
+      // // 创建 zip 并下载
+      // zip
+      // .generateAsync({ type: "blob" }, (e) => {
+      //   console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
+      // })
+      //   .then((content) => {
+      //     console.log("start download");
+      //     saveAs(content, "frames.zip");
+      //     console.log("finished");
+      //   });
     }
   };
 };
