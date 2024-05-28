@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 import stuData from "./data.json";
+const isRec = false;
 
 interface Point {
   x: number;
@@ -258,7 +259,7 @@ export const sketch = (p: P5) => {
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
     btimg = p.loadImage("./btimg2.png");
-    // p.frameRate(30);
+    p.frameRate(30);
 
     p.createCanvas(1200, 1600);
     p.background(255);
@@ -266,7 +267,7 @@ export const sketch = (p: P5) => {
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
 
-    p.pixelDensity(2);
+    p.pixelDensity(1);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
   };
@@ -318,6 +319,7 @@ export const sketch = (p: P5) => {
     }
     // p.image(btimg, 0, 0, p.width, p.height);
     //导出
+    if (!isRec) return;
     if (p.frameCount <= time) {
       //ts-ignore
       imageList.push((p.get() as any).canvas.toDataURL());
