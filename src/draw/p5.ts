@@ -3,8 +3,6 @@ import stuData from "./data.json";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
-const zip = new JSZip();
-
 interface Point {
   x: number;
   y: number;
@@ -230,7 +228,7 @@ export const sketch = (p: P5) => {
   let normal: Font;
   let btimg: Image;
   const imageList: string[] = [];
-  const time = 900;
+  const time = 600;
   const batchSize = 300;
 
   p.setup = () => {
@@ -244,7 +242,7 @@ export const sketch = (p: P5) => {
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
 
-    p.pixelDensity(1);
+    p.pixelDensity(2);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
   };
@@ -285,35 +283,35 @@ export const sketch = (p: P5) => {
     //
     if (p.frameCount <= time) {
       //ts-ignore
-      console.log(p.frameCount);
-
-      imageList.push((p.get() as any).canvas.toDataURL());
+      // console.log(p.frameCount);
+      //
+      // imageList.push((p.get() as any).canvas.toDataURL());
     }
     if (p.frameCount === time) {
-      let zip = new JSZip();
-      const processFramesInBatches = async () => {
-        for (let i = 0; i < imageList.length; i += batchSize) {
-          zip = new JSZip();
-          const batch = imageList.slice(i, i + batchSize);
-          await processBatch(batch, i);
-          const zipBlob = await zip.generateAsync({ type: "blob" }, (e) => {
-            console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
-          });
-          saveAs(zipBlob, "FLframes.zip");
-        }
-      };
-
-      const processBatch = async (batch: string[], offset: number) => {
-        for (let i = 0; i < batch.length; i++) {
-          const imgData = batch[i].split(",")[1];
-          console.log("正在处理第", offset + i + 1, "帧图片");
-          zip.file(`${String(offset + i + 1).padStart(4, "0")}.png`, imgData, {
-            base64: true,
-          });
-        }
-      };
-
-      processFramesInBatches();
+      // let zip = new JSZip();
+      // const processFramesInBatches = async () => {
+      //   for (let i = 0; i < imageList.length; i += batchSize) {
+      //     zip = new JSZip();
+      //     const batch = imageList.slice(i, i + batchSize);
+      //     await processBatch(batch, i);
+      //     const zipBlob = await zip.generateAsync({ type: "blob" }, (e) => {
+      //       console.log(`正在处理：${e.currentFile} 进度：${e.percent}`);
+      //     });
+      //     saveAs(zipBlob, "FLframes.zip");
+      //   }
+      // };
+      //
+      // const processBatch = async (batch: string[], offset: number) => {
+      //   for (let i = 0; i < batch.length; i++) {
+      //     const imgData = batch[i].split(",")[1];
+      //     console.log("正在处理第", offset + i + 1, "帧图片");
+      //     zip.file(`${String(offset + i + 1).padStart(4, "0")}.png`, imgData, {
+      //       base64: true,
+      //     });
+      //   }
+      // };
+      //
+      // processFramesInBatches();
       // for (let i = 0; i < imageList.length; i++) {
       //   const imgData = imageList[i].split(",")[1];
       //   console.log("正在处理第", i + 1, "帧图片");
