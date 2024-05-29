@@ -3,19 +3,20 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
 import stuData from "./data.json";
-const isRec = false;
+const isRec = true;
 
 interface Point {
   x: number;
   y: number;
 }
+
 export const sketch = (p: P5) => {
   class Island {
     topPoints: Point[] = [];
     applyedTopPoints: Point[] = [];
     bottomPoints: Point[][] = [];
     // lineAttr: { [key: string]: string | number };
-    length = 31;
+    length = 30;
     lineNum = 90;
     random: number[] = [];
     random2: number[] = [];
@@ -89,8 +90,8 @@ export const sketch = (p: P5) => {
       fram: number,
     ) => {
       const mid = {
-        x: (p1.x + p2.x) / (2 - this.random[i]),
-        y: (p1.y + p2.y) / (2 - this.random2[i]),
+        x: (p1.x + p2.x) / (2 - 0),
+        y: (p1.y + p2.y) / (2 - 0),
       };
       const p3 = { x: p1.x, y: mid.y };
       const p4 = { x: p2.x, y: mid.y };
@@ -103,9 +104,11 @@ export const sketch = (p: P5) => {
         if (offsetCount < 0) {
           offsetCount = 0;
         }
-        const maxValue = 100;
+        const cc = 170;
+        const maxValue = cc * p.map(this.random2[i], 0, 1, 0.7, 1.3);
+
         let linePose = p.map(
-          (offsetCount % 170) * p.map(this.random2[i], 0, 1, 0.7, 1.3),
+          (offsetCount % cc) * p.map(this.random2[i], 0, 1, 0.7, 1.3),
           0,
           maxValue,
           1,
@@ -123,22 +126,13 @@ export const sketch = (p: P5) => {
             // this.reInit(i);
           }
         }
-        const lineStartX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, linePose);
-        const lineStartY = p.bezierPoint(p1.y, p3.y, p4.y, p2.y, linePose);
+        const lineEndX = p.bezierPoint(p1.x, p3.x, p4.x, p2.x, 1 - linePose);
+        const lineEndY = p.bezierPoint(p1.y, p3.y, p4.y, p2.y, 1 - linePose);
         const mid = {
-          x: (lineStartX + p2.x) / (2 - this.random[i]),
-          y: (lineStartY + p2.y) / (2 - this.random2[i]),
+          x: (p1.x + lineEndX) / (2 - 0),
+          y: (p1.y + lineEndY) / (2 - 0),
         };
-        p.bezier(
-          lineStartX,
-          lineStartY,
-          lineStartX,
-          mid.y,
-          p2.x,
-          mid.y,
-          p2.x,
-          p2.y,
-        );
+        p.bezier(p1.x, p1.y, p1.x, mid.y, lineEndX, mid.y, lineEndX, lineEndY);
         // p.bezier(lineStartX, lineStartY, p3.x, p3.y, p4.x, p4.y, p2.x, p2.y);
       }
 
@@ -162,6 +156,7 @@ export const sketch = (p: P5) => {
         };
       }
     };
+    delayTime = 100;
     updata = (fram: number) => {
       for (let i = 0; i < this.topPoints.length; i++) {
         p.push();
@@ -170,7 +165,8 @@ export const sketch = (p: P5) => {
         let x = 0;
         let y = 0;
         const bt = p.height - this.applyedTopPoints[i].y + y;
-        const timeoffset = this.random[i] * 10;
+        const timeoffset = this.random[i];
+
         if (fram % 10 === timeoffset) {
           x = p.random(-10, 10);
           y = p.random(-10, 10);
@@ -183,60 +179,70 @@ export const sketch = (p: P5) => {
           y: (p.height - bt * this.yScale + 5 * unit) * this.scale,
         };
         p.noFill();
-        const c = p.map(p1.y, 0, p.height * 0.7, 0, 1);
-        const cColor = p.lerpColor(p.color("#00cDdB"), p.color("#17ca05"), c);
-        p.stroke(cColor);
-        for (let j = 0; j < this.bottomPoints[i].length; j++) {
-          p.strokeWeight((p1.y / p.height) * 0.8 + 0.1);
-          this.calcYPath(p1, this.bottomPoints[i][j], i, j, fram);
-        }
-
         p.fill("#fff");
         p.stroke("#ff4f4f");
         p.strokeWeight(0.8);
+        const rw = 0.8 * unit;
+        p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
+        if (fram < this.delayTime) continue;
+        const c = p.map(p1.y, 0, p.height * 0.7, 0, 1);
+        const cColor = p.lerpColor(p.color("#00cDdB"), p.color("#17ca05"), c);
+        p.noFill();
+        p.stroke(cColor);
 
-        if (this.isGrowEndList[i]) {
-          const rw = 0.8 * unit;
-          p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
-          p.noFill();
-          p.stroke("#ff4729");
-          p.strokeWeight(0.5);
-          if (this.boxTime[i] >= 0) {
-            const rww = this.boxList[i].w + p.random(-5, 5);
-            const rwh = this.boxList[i].h + p.random(-5, 5);
-            const offsetX = p.random(-rww * 0.1, rww * 0.1) / 2;
-            const offsetY = p.random(-rwh * 0.1, rwh * 0.1) / 2;
-            p.rect(
-              p1.x - rww / 2 + offsetX,
-              p1.y - rwh / 2 + offsetY,
-              rww,
-              rwh,
-            );
-            p.fill("#103004");
-            p.textFont(normal);
-            p.textSize(15);
-
-            p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
-            this.boxTime[i]--;
-          } else {
-            if (p.random(1) > 0.995) {
-              const rww = p.random(3, 6) * unit;
-              const rwh = p.random(2.5, 5) * unit;
-              p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
-              this.boxList[i] = { w: rww, h: rwh };
-              if (p.random(1) > 0.5) {
-                this.boxTime[i] = Math.floor(p.random(0, 120));
-              } else {
-                this.boxTime[i] = Math.floor(p.random(0, 10));
-              }
-            }
-            if (p.random(1) > 0.999) {
-              const rww = p.random(30, 100) * unit;
-              const rwh = p.random(30, 60) * unit;
-              p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
-            }
-          }
+        for (let j = 0; j < this.bottomPoints[i].length; j++) {
+          p.strokeWeight((p1.y / p.height) * 0.8 + 0.1);
+          this.calcYPath(
+            p1,
+            this.bottomPoints[i][j],
+            i,
+            j,
+            fram - this.delayTime,
+          );
         }
+
+        p.noFill();
+        p.fill("#fff");
+        p.stroke("#ff4f4f");
+        p.strokeWeight(0.8);
+        p.rect(p1.x - rw / 2, p1.y - rw / 2, rw, rw);
+        // if (this.isGrowEndList[i]) {
+        // if (this.boxTime[i] >= 0) {
+        //   const rww = this.boxList[i].w + p.random(-5, 5);
+        //   const rwh = this.boxList[i].h + p.random(-5, 5);
+        //   const offsetX = p.random(-rww * 0.1, rww * 0.1) / 2;
+        //   const offsetY = p.random(-rwh * 0.1, rwh * 0.1) / 2;
+        //   p.rect(
+        //     p1.x - rww / 2 + offsetX,
+        //     p1.y - rwh / 2 + offsetY,
+        //     rww,
+        //     rwh,
+        //   );
+        //   p.fill("#103004");
+        //   p.textFont(normal);
+        //   p.textSize(15);
+        //
+        //   p.text(stuData[i].name, p1.x + offsetX, p1.y + offsetY);
+        //   this.boxTime[i]--;
+        // } else {
+        //   if (p.random(1) > 0.995) {
+        //     const rww = p.random(3, 6) * unit;
+        //     const rwh = p.random(2.5, 5) * unit;
+        //     p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
+        //     this.boxList[i] = { w: rww, h: rwh };
+        //     if (p.random(1) > 0.5) {
+        //       this.boxTime[i] = Math.floor(p.random(0, 120));
+        //     } else {
+        //       this.boxTime[i] = Math.floor(p.random(0, 10));
+        //     }
+        //   }
+        //   if (p.random(1) > 0.999) {
+        //     const rww = p.random(30, 100) * unit;
+        //     const rwh = p.random(30, 60) * unit;
+        //     p.rect(p1.x - rww / 2, p1.y - rww / 2, rww, rwh);
+        //   }
+        // }
+        // }
         p.pop();
       }
     };
@@ -267,13 +273,12 @@ export const sketch = (p: P5) => {
     rows = p.width / scl;
     cols = Math.floor(p.height / scl);
 
-    p.pixelDensity(1);
+    p.pixelDensity(2);
     i = new Island();
     unit = p.sqrt(p.height * p.width) / 100;
   };
   p.draw = () => {
     const fram = p.frameCount % time;
-
     p.background(255);
     p.push();
     // p.translate(0, -p.width * 0.1);
