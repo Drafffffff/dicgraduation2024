@@ -1,7 +1,5 @@
-import P5, { Font, Image, Vector } from "p5";
+import P5, { Font, Vector } from "p5";
 import stuData from "./data.json";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 
 interface Point {
   x: number;
@@ -218,7 +216,7 @@ export const sketch = (p: P5) => {
     };
   }
 
-  let inc = 0.1;
+  const inc = 0.1;
   let rows: number, cols: number;
   let scl: number;
   let i: Island;
@@ -226,14 +224,10 @@ export const sketch = (p: P5) => {
   let zoff = 0;
   const flowField: Vector[] = [];
   let normal: Font;
-  let btimg: Image;
-  const imageList: string[] = [];
   const time = 600;
-  const batchSize = 300;
 
   p.setup = () => {
     normal = p.loadFont("./SinkinSans-400Regular.otf");
-    btimg = p.loadImage("./btimg.png");
     p.frameRate(30);
 
     p.createCanvas(1200, 1600);
@@ -251,13 +245,13 @@ export const sketch = (p: P5) => {
     p.background(255);
     p.push();
     // p.translate(0, -p.width * 0.1);
-    var yoff = 0;
+    let yoff = 0;
     p.noiseDetail(7, 0.4);
     for (let y = 0; y < rows; y++) {
       let xoff = 0;
       for (let x = 0; x < cols; x++) {
-        let index = x + y * cols;
-        let angle = p.noise(xoff, yoff, zoff) * p.TWO_PI;
+        const index = x + y * cols;
+        const angle = p.noise(xoff, yoff, zoff) * p.TWO_PI;
         const v = Vector.fromAngle(angle);
         v.setMag(100);
         flowField[index] = v;
